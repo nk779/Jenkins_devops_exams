@@ -1,0 +1,64 @@
+
+db:
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    tag: "12.1-alpine"
+
+volume:
+  name: storage
+  accessMode: ReadWriteOnce
+  storageClassName: local-path
+  storage: 5Gi  
+
+movieService:
+  replicaCount: 1
+  image:
+    repository: nk779/movie-service
+    pullPolicy: IfNotPresent
+    tag: "v1.0.0-release"
+  service:
+    type: ClusterIP
+    port: 8001
+    targetPort: 8000
+
+movieDB:
+  name: "movie_db_dev"
+  user: "movie_db_username"
+  pw: "movie_db_password"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 5443
+
+castService:
+  replicaCount: 1
+  image:
+    repository: nk779/cast-service
+    pullPolicy: IfNotPresent
+    tag: "v1.0.0"
+  service:
+    type: ClusterIP
+    port: 8002
+    targetPort: 8000
+
+castDB:
+  name: "cast_db_dev"
+  user: "cast_db_username"
+  pw: "cast_db_password"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 5443
+
+nginx:
+  replicaCount: 1
+  image:
+    repository: nginx
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: NodePort
+    nodePort: 30080
+    port: 8000
+    targetPort: 8000

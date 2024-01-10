@@ -1,0 +1,102 @@
+{{/*
+This file defines following resource objects: 
+- a Deployment for movieService,
+- a Deployment for castService and
+- a Deployment for nginx
+*/}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-movie-service
+  labels:
+    app: {{ .Release.Name }}-movie-service
+spec:
+  replicas: {{ .Values.movieService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-movie-service
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-movie-service
+    spec:
+      containers:
+        - name: {{ .Release.Name }}-movie-service
+          image: "{{ .Values.movieService.image.repository }}:{{ .Values.movieService.image.tag | default .Chart.AppVersion }}"
+          command: ["uvicorn"]
+          args: ["app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8001"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.movieService.service.port }}
+              protocol: TCP
+          env:
+          - name: DATABASE_URI
+            value: postgresql://{{ .Values.movieDB.user }}:{{ .Values.movieDB.pwd }}@{{ .Release.Name }}-movie-service/{{ .Values.movieDB.name }}
+          - name: CAST_SERVICE_HOST_URL
+            value: http://{{ .Release.Name }}-cast-service:{{ .Values.castService.service.port }}/api/v1/casts/
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-cast-service
+  labels:
+    app: {{ .Release.Name }}-cast-service
+spec:
+  replicas: {{ .Values.castService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-cast-service
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-cast-service
+    spec:
+      containers:
+        - name: {{ .Release.Name }}-cast-service
+          image: "{{ .Values.castService.image.repository }}:{{ .Values.castService.image.tag | default .Chart.AppVersion }}"
+          command: ["uvicorn"]
+          args: ["app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8002"]
+          ports:
+            - containerPort: {{ .Values.castService.service.port }}
+          env:
+          - name: DATABASE_URI
+            value: postgresql://{{ .Values.castDB.user }}:{{ .Values.castDB.pwd }}@{{ .Release.Name }}-cast-service/{{ .Values.castDB.name }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-nginx
+  labels:
+    app: {{ .Release.Name }}-nginx
+spec:
+  replicas: {{ .Values.nginx.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-nginx
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.nginx.service.port }}
+          volumeMounts:
+            - name: nginx-config-volume
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+      volumes:
+        - name: nginx-config-volume
+          configMap:
+            name: nginx-config
+            items:
+            - key: nginx_config.conf
+              path: default.conf
+
