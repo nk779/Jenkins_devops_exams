@@ -16,7 +16,7 @@ movieService:
   image:
     repository: nk779/movie-service
     pullPolicy: IfNotPresent
-    tag: "v1.0.0-release"
+    tag: "latest"
   service:
     type: ClusterIP
     port: 8001
@@ -36,7 +36,7 @@ castService:
   image:
     repository: nk779/cast-service
     pullPolicy: IfNotPresent
-    tag: "v1.0.0"
+    tag: "latest"
   service:
     type: ClusterIP
     port: 8002
