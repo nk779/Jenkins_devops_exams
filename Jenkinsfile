@@ -110,6 +110,14 @@ pipeline {
                 script {
                     sh '''
                         echo "Let's deploy in qa"
+                        rm -Rf .kube
+                        mkdir .kube
+                        ls
+                        cat $KUBECONFIG > .kube/config
+                        cp kubernetes/jenkins-devops-exams/values.yaml values.yml
+                        cat values.yml
+                        sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                        helm upgrade --install app kubernetes/jenkins-devops-exams --values=values.yml --namespace qa
                     '''
                 }
             }
@@ -123,6 +131,14 @@ pipeline {
                 script {
                     sh '''
                         echo "Let's deploy in staging"
+                        rm -Rf .kube
+                        mkdir .kube
+                        ls
+                        cat $KUBECONFIG > .kube/config
+                        cp kubernetes/jenkins-devops-exams/values.yaml values.yml
+                        cat values.yml
+                        sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                        helm upgrade --install app kubernetes/jenkins-devops-exams --values=values.yml --namespace staging
                     '''
                 }
             }
@@ -142,6 +158,14 @@ pipeline {
                 script {
                     sh '''
                         echo "Let's deploy in prod"
+                        rm -Rf .kube
+                        mkdir .kube
+                        ls
+                        cat $KUBECONFIG > .kube/config
+                        cp kubernetes/jenkins-devops-exams/values.yaml values.yml
+                        cat values.yml
+                        sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                        helm upgrade --install app kubernetes/jenkins-devops-exams --values=values.yml --namespace prod
                     '''
                 }
             }
