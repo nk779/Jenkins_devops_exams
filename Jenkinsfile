@@ -89,6 +89,14 @@ pipeline {
                 script {
                     sh '''
                         echo "Let's deploy in dev"
+                        rm -Rf .kube
+                        mkdir .kube
+                        ls
+                        cat $KUBECONFIG > .kube/config
+                        cp kubernetes/jenkins-devops-exams/values.yaml values.yml
+                        cat values.yml
+                        sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                        helm upgrade --install app kubernetes/jenkins-devops-exams --values=values.yml --namespace dev
                     '''
                 }
             }
