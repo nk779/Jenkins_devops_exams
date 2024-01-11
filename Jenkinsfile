@@ -62,8 +62,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        #docker login -u $DOCKER_ID -p $DOCKER_PASS
-                        #docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                        docker login -u $DOCKER_ID -p $DOCKER_PASS
+                        docker push $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG
+                        docker push $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG
                     '''
                 }
             }
@@ -131,8 +132,8 @@ pipeline {
     post { // send email when the job has failed
         success {
             sh '''
-                docker rmi $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG 
-                docker rmi $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG
+                docker stop nginx-proxy movie_service movie-db cast_service cast-db
+                docker rmi $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG 
             '''
         }
 
