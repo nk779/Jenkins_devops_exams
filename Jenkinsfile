@@ -131,7 +131,7 @@ pipeline {
     }
 
     post { // send email when the job has failed
-        always {
+        success {
             sh '''
                 docker network rm jk_exam
                 docker rmi $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG 
