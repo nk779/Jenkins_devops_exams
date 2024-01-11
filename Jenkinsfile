@@ -25,12 +25,10 @@ pipeline {
             }
         }
 
-        stage(' Docker run'){ // run container from our built image
+        stage(' Docker run'){ // run 'docker network create -d bridge jk_exam'
             steps {
                 script {
                     sh '''
-                        docker network create -d bridge jk_exam
-
                         echo "Run cast application: cast-db & cast-service"
                         docker run --rm -d --name cast-db --network jk_exam --env POSTGRES_USER=cast_db_username --env POSTGRES_PASSWORD=cast_db_password --env POSTGRES_DB=cast_db_dev postgres:12.1-alpine
                         docker run --rm -d -p 8002:8000 --name cast_service --network jk_exam --env DATABASE_URI=postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG  uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -133,7 +131,6 @@ pipeline {
     post { // send email when the job has failed
         success {
             sh '''
-                docker network rm jk_exam
                 docker rmi $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG 
                 docker rmi $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG
             '''
