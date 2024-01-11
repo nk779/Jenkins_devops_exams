@@ -53,7 +53,7 @@ pipeline {
                         movie_rq_status_code=$(curl --write-out %{http_code} --silent --output /dev/null ${nginx_ip}:8088/api/v1/movies/docs)
                         cast_rq_status_code=$(curl --write-out %{http_code} --silent --output /dev/null ${nginx_ip}:8088/api/v1/casts/docs)
  
-                        if [[ "$movie_rq_status_code" -ne 200 ]] || [ "$cast_rq_status_code" -ne 200 ]]; then
+                        if [[ "$movie_rq_status_code" -ne 200 ]] || [[ "$cast_rq_status_code" -ne 200 ]]; then
                             echo "curl ${nginx_ip}:8088/api/v1/movie/docs: $movie_rq_status_code"
                             echo "curl ${nginx_ip}:8088/api/v1/casts/docs: $cast_rq_status_code" 
                             error "Test failed!"

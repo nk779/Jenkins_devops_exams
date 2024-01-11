@@ -51,7 +51,6 @@ spec:
   type: {{ .Values.nginx.service.type }}
   ports:
     - name: http
-      nodePort: {{ .Values.nginx.service.nodePort }}
       port: {{ .Values.nginx.service.port }}
       targetPort: {{ .Values.nginx.service.targetPort }}
       protocol: TCP   
