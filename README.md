@@ -37,6 +37,24 @@ Learn to build your own microservice using Python and FastAPI
  - cd kubernetes
  - helm lint ./jenkins-devops-exams/ # validate k8s resource object codes
  - helm upgrade -i jenkins-devops-exams-chart ./jenkins-devops-exams --values=./jenkins-devops-exams/values.yaml # the -i flag install the release if it doesn't exit
+
+ ## Build Jenkinsfile: run locally all cmd of scripts to verify cmd
+ - docker build -t nk779/movie-service:v1.0.0 ./movie-service
+ - docker build -t nk779/cast-service:v1.0.0 ./cast-service
+
+ - docker network create -d bridge jk_exam
+
+ - docker run --rm -d --name cast-db --network jk_exam --env POSTGRES_USER=cast_db_username --env POSTGRES_PASSWORD=cast_db_password --env POSTGRES_DB=cast_db_dev postgres:12.1-alpine
+ - docker run --rm -d --name movie-db --network jk_exam --env POSTGRES_USER=movie_db_username --env POSTGRES_PASSWORD=movie_db_password --env POSTGRES_DB=movie_db_dev postgres:12.1-alpine
+
+ - docker run --rm -d -p 8002:8000 --name cast_service --network jk_exam --env DATABASE_URI=postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev nk779/cast-service:v1.0.0  uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+ - docker run --rm -d -p 8001:8000 --name movie_service --network jk_exam --env DATABASE_URI=postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev --env CAST_SERVICE_HOST_URL=http://cast_service:8000/api/v1/casts/ nk779/movie-service:v1.0.0 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+ // change your own absolut path to the file nginx_config.conf
+ - docker run --rm -d -p 8080:8000 --name nginx-proxy --network jk_exam -v ~/DevOpsBootcamp/Projects/Jenkins_devops_exams/nginx_config.conf:/etc/nginx/conf.d/default.conf nginx
+
+ 
   
  
 

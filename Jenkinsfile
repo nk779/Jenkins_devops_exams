@@ -1,8 +1,9 @@
 pipeline {
     environment { // Declaration of environment variables
         DOCKER_ID = "nk779"
-        DOCKER_IMAGE = "jenkins_devops_exams"// "datascientestapi"
-        DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
+        DOCKER_MOVIE_IMAGE = "movie-service"
+        DOCKER_CAST_IMAGE = "cast-service"
+        DOCKER_TAG = "v.${BUILD_ID}.0"
     }
     
     agent any // Jenkins will be able to select all available agents
@@ -11,7 +12,14 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        echo "Let's run docker build"
+                        docker build -t $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG ./movie-service
+                        sleep 6
+                    '''
+                }
+                script {
+                    sh '''
+                        docker build -t $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG ./case-service
+                        sleep 6
                     '''
                 }
             }
@@ -21,7 +29,18 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        echo "Let's run docker run"
+                        docker network create -d bridge jk_exam
+
+                        echo "Run cast application: cast-db & cast-service"
+                        docker run --rm -d --name cast-db --network jk_exam --env POSTGRES_USER=cast_db_username --env POSTGRES_PASSWORD=cast_db_password --env POSTGRES_DB=cast_db_dev postgres:12.1-alpine
+                        docker run --rm -d -p 8002:8000 --name cast_service --network jk_exam --env DATABASE_URI=postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG  uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+                        
+                        echo "Run movie application: movie-db & movie-service with injection cast-service"
+                        docker run --rm -d --name movie-db --network jk_exam --env POSTGRES_USER=movie_db_username --env POSTGRES_PASSWORD=movie_db_password --env POSTGRES_DB=movie_db_dev postgres:12.1-alpine
+                        docker run --rm -d -p 8001:8000 --name movie_service --network jk_exam --env DATABASE_URI=postgresql://movie_db_username:movie_db_password@movie-db/movie_db --env CAST_SERVICE_HOST_URL=http://cast_service:8000/api/v1/casts/ $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+                    
+                        echo "Start nginx reverse proxy"
+                        docker run --rm -d -p 8080:8000 --name nginx-proxy --network jk_exam -v ./nginx_config.conf:/etc/nginx/conf.d/default.conf nginx
                     '''
                 }
             }
