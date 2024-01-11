@@ -18,7 +18,7 @@ pipeline {
                 }
                 script {
                     sh '''
-                        docker build -t $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG ./case-service
+                        docker build -t $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG ./cast-service
                         sleep 6
                     '''
                 }
@@ -40,7 +40,7 @@ pipeline {
                         docker run --rm -d -p 8001:8000 --name movie_service --network jk_exam --env DATABASE_URI=postgresql://movie_db_username:movie_db_password@movie-db/movie_db --env CAST_SERVICE_HOST_URL=http://cast_service:8000/api/v1/casts/ $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
                     
                         echo "Start nginx reverse proxy"
-                        docker run --rm -d -p 8080:8000 --name nginx-proxy --network jk_exam -v ./nginx_config.conf:/etc/nginx/conf.d/default.conf nginx
+                        docker run --rm -d -p 8088:8000 --name nginx-proxy --network jk_exam -v ./nginx_config.conf:/etc/nginx/conf.d/default.conf nginx
                     '''
                 }
             }
