@@ -54,6 +54,8 @@ Learn to build your own microservice using Python and FastAPI
  // change your own absolut path to the file nginx_config.conf
  - docker run --rm -d -p 8080:8000 --name nginx-proxy --network jk_exam -v ~/DevOpsBootcamp/Projects/Jenkins_devops_exams/nginx_config.conf:/etc/nginx/conf.d/default.conf nginx
 
+ - curl 172.18.0.6:8088/api/v1/movies/doc // my IPv4 of nginx-proxy container(using docker network inspect nginx-proxy)
+
  
   
  

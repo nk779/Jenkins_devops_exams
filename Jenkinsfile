@@ -37,7 +37,7 @@ pipeline {
                         
                         echo "Run movie application: movie-db & movie-service with injection cast-service"
                         docker run --rm -d --name movie-db --network jk_exam --env POSTGRES_USER=movie_db_username --env POSTGRES_PASSWORD=movie_db_password --env POSTGRES_DB=movie_db_dev postgres:12.1-alpine
-                        docker run --rm -d -p 8001:8000 --name movie_service --network jk_exam --env DATABASE_URI=postgresql://movie_db_username:movie_db_password@movie-db/movie_db --env CAST_SERVICE_HOST_URL=http://cast_service:8000/api/v1/casts/ $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+                        docker run --rm -d -p 8001:8000 --name movie_service --network jk_exam --env DATABASE_URI=postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev --env CAST_SERVICE_HOST_URL=http://cast_service:8000/api/v1/casts/ $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
                     
                         echo "Start nginx reverse proxy"
                         docker run --rm -d -p 8088:8000 --name nginx-proxy --network jk_exam -v ./nginx_config.conf:/etc/nginx/conf.d/default.conf nginx
@@ -131,6 +131,14 @@ pipeline {
     }
 
     post { // send email when the job has failed
+        always {
+            sh '''
+                docker network rm jk_exam
+                docker rmi $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG 
+                docker rmi $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG
+            '''
+        }
+
         failure {
             echo "This will run if the job failed"
             mail to: "th_nguyen@gmx.de",
