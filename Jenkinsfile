@@ -49,6 +49,17 @@ pipeline {
                 script {
                     sh '''
                         echo "Let's run test"
+                        nginx_ip=$(docker network inspect -f '{{json .Containers}}' jk_exam | jq '..|if type == "object" and has("Name") then select(.Name=="nginx-proxy") | .IPv4Address else empty end' -r | awk -F / '{print $1}')
+                        movie_rq_status_code=$(curl --write-out %{http_code} --silent --output /dev/null ${nginx_ip}:8088/api/v1/movie/docs)
+                        cast_rq_status_code=$(curl --write-out %{http_code} --silent --output /dev/null ${nginx_ip}:8088/api/v1/casts/docs)
+ 
+                        if [[ "$movie_rq_status_code" -ne 200 ]] || [ "$statcast_rq_status_codeus_code_2" -ne 200 ]]; then
+                            echo "curl ${nginx_ip}:8088/api/v1/movie/docs: $movie_rq_status_code"
+                            echo "curl ${nginx_ip}:8088/api/v1/casts/docs: $cast_rq_status_code" 
+                            error "Test failed!"
+                        else
+                            "Test passed!"
+                        fi
                     '''
                 }
             }
